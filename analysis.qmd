@@ -1,4 +1,45 @@
 ---
 title: "Analyzing US Census Data"
 author: "Dustin Tharp"
+execute:
+  echo: false
 ---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(tidycensus)
+library(sf)
+```
+
+```{r}
+#| message: false
+#| cache: true
+income_tx <- get_acs(
+  geography = "county",
+  variables = "B19013_001",
+  state = "TX",
+  year = 2020,
+  survey = "acs5",
+  geometry = TRUE
+)
+```
+
+```{r}
+ggplot(income_tx) +
+  geom_sf(aes(fill = estimate), color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(
+    name = "Median household income (USD)",
+    labels = scales::label_dollar()
+  ) +
+  labs(
+    title = "Median Household Income Across Texas Counties",
+    caption = "Source: U.S. Census Bureau, 2020 ACS 5-year estimates"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(face = "bold", size = 16),
+    plot.caption = element_text(color = "gray40"),
+    legend.position = "right"
+  )
+```
