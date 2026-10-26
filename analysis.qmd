@@ -43,3 +43,57 @@ ggplot(income_tx) +
     legend.position = "right"
   )
 ```
+
+```{r}
+#| message: false
+edu_state <- get_acs(
+  geography = "state",
+  variables = c(
+    total = "B15003_001",
+    bachelors = "B15003_022",
+    masters = "B15003_023",
+    professional = "B15003_024",
+    doctorate = "B15003_025"
+  ),
+  year = 2020,
+  survey = "acs5",
+  summary_var = "B15003_001"
+)
+```
+
+```{r}
+edu_state_summary <- edu_state |>
+  group_by(GEOID, NAME) |>
+  summarize(
+    total = first(summary_est),
+    bachelors_plus = sum(
+      estimate[variable %in% c("bachelors", "masters", "professional", "doctorate")],
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  ) |>
+  mutate(percent_bachelors_plus = 100 * bachelors_plus / total) |>
+  arrange(desc(percent_bachelors_plus))
+
+ggplot(
+  edu_state_summary,
+  aes(
+    x = percent_bachelors_plus,
+    y = reorder(NAME, percent_bachelors_plus)
+  )
+) +
+  geom_col(fill = "steelblue") +
+scale_x_continuous(labels = scales::label_percent(scale = 1)) +
+labs(
+  x = "Adults with a bachelor's degree or higher",
+  y = NULL,
+  title = "Bachelor's Degree or Higher by State",
+  caption = "Source: U.S. Census Bureau, 2020 ACS 5-year estimates"
+) +
+theme_minimal() +
+theme(
+  plot.title = element_text(face = "bold", size = 16),
+  plot.caption = element_text(color = "gray40"),
+  panel.grid.major.y = element_blank()
+)
+```
